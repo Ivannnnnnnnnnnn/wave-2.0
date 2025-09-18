@@ -15,6 +15,10 @@ https://t.me/+6qniFrNOalcxYjE0
 ### Aimbot
 - Aimbot (Hold RMB to aim at enemies)
 - Team Check
+- Wall Check
+- Smoothness
+- Prediction
+- Triggerbot
 - FOV radius
 
 ### Visuals
@@ -38,10 +42,3 @@ https://t.me/+6qniFrNOalcxYjE0
 
 **Arsenal (another popular game)**  
 <img width="1920" height="1009" alt="RobloxScreenShot20250918_221139804" src="https://github.com/user-attachments/assets/592d56e7-51c6-47fd-b101-cd3c3db1c8ce" />
-
----
-
-## Screenshots
-
-**Arsenal (popular Roblox FPS game)**  
-![Screenshot 2025-05-30 180226](https://github.com/user-attachments/assets/ebab49b4-e74c-401f-9db1-270c710e07fd)
