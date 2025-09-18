@@ -1,4 +1,4 @@
-﻿local Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local ContentProvider = game:GetService("ContentProvider")
@@ -658,13 +658,5 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.Insert then
         settings.menuOpen = not settings.menuOpen
         Frame.Visible = settings.menuOpen
-    end
-end)
-
-game:GetService("UserInputService").WindowFocusReleased:Connect(function()
-    for _, drawing in ipairs(drawings) do
-        pcall(function()
-            drawing:Remove()
-        end)
     end
 end)
