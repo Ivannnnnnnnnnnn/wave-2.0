@@ -117,12 +117,14 @@ local settings = {
     triggerBot = false,
     triggerDelay = 0.1,
     wallCheck = false,
+    skeletonEsp = false, -- Added skeleton ESP setting
 }
 
 local espBoxes = {}
 local espNames = {}
 local espHealth = {}
 local espDistance = {}
+local skeletonLines = {} -- Added for skeleton ESP
 local drawings = {}
 
 local fovCircle = Drawing.new("Circle")
@@ -170,6 +172,34 @@ local function isEnemy(p)
     return true
 end
 
+-- Skeleton ESP bone connections
+local skeletonConnections = {
+    -- Torso connections
+    {"HumanoidRootPart", "LowerTorso"},
+    {"LowerTorso", "UpperTorso"},
+    {"UpperTorso", "Head"},
+    
+    -- Left arm
+    {"UpperTorso", "LeftUpperArm"},
+    {"LeftUpperArm", "LeftLowerArm"},
+    {"LeftLowerArm", "LeftHand"},
+    
+    -- Right arm
+    {"UpperTorso", "RightUpperArm"},
+    {"RightUpperArm", "RightLowerArm"},
+    {"RightLowerArm", "RightHand"},
+    
+    -- Left leg
+    {"LowerTorso", "LeftUpperLeg"},
+    {"LeftUpperLeg", "LeftLowerLeg"},
+    {"LeftLowerLeg", "LeftFoot"},
+    
+    -- Right leg
+    {"LowerTorso", "RightUpperLeg"},
+    {"RightUpperLeg", "RightLowerLeg"},
+    {"RightLowerLeg", "RightFoot"},
+}
+
 local function createESP(player)
     if espBoxes[player] then return end
     
@@ -212,6 +242,17 @@ local function createESP(player)
     distance.Color = Color3.new(1, 1, 1)
     espDistance[player] = distance
     table.insert(drawings, distance)
+    
+    -- Create skeleton lines for this player
+    skeletonLines[player] = {}
+    for i = 1, #skeletonConnections do
+        local line = Drawing.new("Line")
+        line.Thickness = 1
+        line.Visible = false
+        line.Color = settings.espColor
+        table.insert(skeletonLines[player], line)
+        table.insert(drawings, line)
+    end
 end
 
 local function removeESP(player)
@@ -230,6 +271,38 @@ local function removeESP(player)
     if espDistance[player] then
         espDistance[player]:Remove()
         espDistance[player] = nil
+    end
+    -- Remove skeleton lines
+    if skeletonLines[player] then
+        for _, line in ipairs(skeletonLines[player]) do
+            line:Remove()
+        end
+        skeletonLines[player] = nil
+    end
+end
+
+local function updateSkeletonESP(player, character)
+    if not settings.skeletonEsp or not skeletonLines[player] then return end
+    
+    for i, connection in ipairs(skeletonConnections) do
+        local part1 = character:FindFirstChild(connection[1])
+        local part2 = character:FindFirstChild(connection[2])
+        
+        if part1 and part2 then
+            local pos1, vis1 = Camera:WorldToViewportPoint(part1.Position)
+            local pos2, vis2 = Camera:WorldToViewportPoint(part2.Position)
+            
+            if vis1 and vis2 then
+                skeletonLines[player][i].From = Vector2.new(pos1.X, pos1.Y)
+                skeletonLines[player][i].To = Vector2.new(pos2.X, pos2.Y)
+                skeletonLines[player][i].Visible = true
+                skeletonLines[player][i].Color = settings.espColor
+            else
+                skeletonLines[player][i].Visible = false
+            end
+        else
+            skeletonLines[player][i].Visible = false
+        end
     end
 end
 
@@ -365,11 +438,21 @@ RunService.RenderStepped:Connect(function()
                     else
                         espDistance[p].Visible = false
                     end
+                    
+                    -- Update skeleton ESP
+                    updateSkeletonESP(p, character)
                 else
                     espBoxes[p].Visible = false
                     espNames[p].Visible = false
                     espHealth[p].Visible = false
                     espDistance[p].Visible = false
+                    
+                    -- Hide skeleton lines if not visible
+                    if skeletonLines[p] then
+                        for _, line in ipairs(skeletonLines[p]) do
+                            line.Visible = false
+                        end
+                    end
                 end
             end
         elseif espBoxes[p] then
@@ -572,9 +655,10 @@ local function drawTabContent()
         makeToggle("ESP Names", baseY + spacing, "espNames")
         makeToggle("ESP Health", baseY + spacing*2, "espHealth")
         makeToggle("ESP Distance", baseY + spacing*3, "espDistance")
-        makeSlider("ESP R", baseY + spacing*4, "espR", 0, 255)
-        makeSlider("ESP G", baseY + spacing*5, "espG", 0, 255)
-        makeSlider("ESP B", baseY + spacing*6, "espB", 0, 255)
+        makeToggle("Skeleton ESP", baseY + spacing*4, "skeletonEsp") -- Added skeleton ESP toggle
+        makeSlider("ESP R", baseY + spacing*5, "espR", 0, 255)
+        makeSlider("ESP G", baseY + spacing*6, "espG", 0, 255)
+        makeSlider("ESP B", baseY + spacing*7, "espB", 0, 255)
     elseif currentTab == "Misc" then
         makeToggle("Bunnyhop", baseY, "bhopEnabled")
         makeToggle("Speedhack", baseY + spacing, "speedhackEnabled")
