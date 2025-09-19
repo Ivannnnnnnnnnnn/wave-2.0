@@ -26,6 +26,7 @@ https://t.me/+6qniFrNOalcxYjE0
 - ESP names
 - ESP health
 - ESP distance
+- ESP skeleton
 - ESP color
 
 ### MISC
