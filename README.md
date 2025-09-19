@@ -43,3 +43,6 @@ https://t.me/+6qniFrNOalcxYjE0
 
 **Arsenal (another popular game)**  
 <img width="1920" height="1009" alt="RobloxScreenShot20250918_221139804" src="https://github.com/user-attachments/assets/592d56e7-51c6-47fd-b101-cd3c3db1c8ce" />
+
+**Rivals**  
+<img width="1920" height="1009" alt="RobloxScreenShot20250919_210236400" src="https://github.com/user-attachments/assets/972ecd4f-9700-48e2-96d3-cd1b230a22f2" />
