@@ -33,6 +33,8 @@ https://t.me/+6qniFrNOalcxYjE0
 - Bunnyhop (works in most games)
 - Speedhack (functional in most games)
 - AntiAim (partly works)
+- Fly
+- NoClip
 
 ---
 
