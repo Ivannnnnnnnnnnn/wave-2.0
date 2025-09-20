@@ -117,14 +117,14 @@ local settings = {
     triggerBot = false,
     triggerDelay = 0.1,
     wallCheck = false,
-    skeletonEsp = false, -- Added skeleton ESP setting
+    skeletonEsp = false,
 }
 
 local espBoxes = {}
 local espNames = {}
 local espHealth = {}
 local espDistance = {}
-local skeletonLines = {} -- Added for skeleton ESP
+local skeletonLines = {}
 local drawings = {}
 
 local fovCircle = Drawing.new("Circle")
@@ -172,29 +172,24 @@ local function isEnemy(p)
     return true
 end
 
--- Skeleton ESP bone connections
 local skeletonConnections = {
-    -- Torso connections
+
     {"HumanoidRootPart", "LowerTorso"},
     {"LowerTorso", "UpperTorso"},
     {"UpperTorso", "Head"},
     
-    -- Left arm
     {"UpperTorso", "LeftUpperArm"},
     {"LeftUpperArm", "LeftLowerArm"},
     {"LeftLowerArm", "LeftHand"},
     
-    -- Right arm
     {"UpperTorso", "RightUpperArm"},
     {"RightUpperArm", "RightLowerArm"},
     {"RightLowerArm", "RightHand"},
     
-    -- Left leg
     {"LowerTorso", "LeftUpperLeg"},
     {"LeftUpperLeg", "LeftLowerLeg"},
     {"LeftLowerLeg", "LeftFoot"},
     
-    -- Right leg
     {"LowerTorso", "RightUpperLeg"},
     {"RightUpperLeg", "RightLowerLeg"},
     {"RightLowerLeg", "RightFoot"},
@@ -243,7 +238,6 @@ local function createESP(player)
     espDistance[player] = distance
     table.insert(drawings, distance)
     
-    -- Create skeleton lines for this player
     skeletonLines[player] = {}
     for i = 1, #skeletonConnections do
         local line = Drawing.new("Line")
@@ -272,7 +266,7 @@ local function removeESP(player)
         espDistance[player]:Remove()
         espDistance[player] = nil
     end
-    -- Remove skeleton lines
+
     if skeletonLines[player] then
         for _, line in ipairs(skeletonLines[player]) do
             line:Remove()
@@ -744,3 +738,4 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
         Frame.Visible = settings.menuOpen
     end
 end)
+
