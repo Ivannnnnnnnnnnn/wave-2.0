@@ -118,7 +118,18 @@ local settings = {
     triggerDelay = 0.1,
     wallCheck = false,
     skeletonEsp = false,
+    flyEnabled = false,
+    noclipEnabled = false,
+    flySpeed = 85,
 }
+
+local flying = false
+local flyBV = nil
+local flyBG = nil
+local flySpeed = settings.flySpeed
+
+local noclip = false
+local connection = nil
 
 local espBoxes = {}
 local espNames = {}
@@ -147,6 +158,106 @@ UIS.InputEnded:Connect(function(input)
         aiming = false 
     end
 end)
+
+local function toggleFly()
+    if not LP.Character or not LP.Character:FindFirstChild("Humanoid") or not LP.Character:FindFirstChild("HumanoidRootPart") then
+        return
+    end
+    
+    flying = not flying
+    
+    if flying then
+        flyBV = Instance.new("BodyVelocity")
+        flyBV.Name = "FlyBV"
+        flyBV.Parent = LP.Character.HumanoidRootPart
+        flyBV.MaxForce = Vector3.new(0, 0, 0)
+        flyBV.Velocity = Vector3.new(0, 0, 0)
+        
+        flyBG = Instance.new("BodyGyro")
+        flyBG.Name = "FlyBG"
+        flyBG.Parent = LP.Character.HumanoidRootPart
+        flyBG.MaxTorque = Vector3.new(0, 0, 0)
+        flyBG.P = 1000
+        flyBG.D = 50
+        
+        flyBV.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        flyBG.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        
+        LP.Character.Humanoid.PlatformStand = true
+    else
+        if flyBV then
+            flyBV:Destroy()
+            flyBV = nil
+        end
+        if flyBG then
+            flyBG:Destroy()
+            flyBG = nil
+        end
+        
+        LP.Character.Humanoid.PlatformStand = false
+    end
+end
+
+local function toggleNoclip()
+    noclip = not noclip
+    
+    if connection then
+        connection:Disconnect()
+        connection = nil
+    end
+    
+    if noclip then
+        connection = RunService.Stepped:Connect(function()
+            if LP.Character then
+                for _, part in pairs(LP.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    else
+        if LP.Character then
+            for _, part in pairs(LP.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end
+
+local function flyControls()
+    if flying and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
+        local root = LP.Character.HumanoidRootPart
+        local cam = workspace.CurrentCamera
+        local flyDirection = Vector3.new(0, 0, 0)
+        
+        if UIS:IsKeyDown(Enum.KeyCode.W) then
+            flyDirection = flyDirection + (cam.CFrame.LookVector * flySpeed)
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then
+            flyDirection = flyDirection - (cam.CFrame.LookVector * flySpeed)
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then
+            flyDirection = flyDirection - (cam.CFrame.RightVector * flySpeed)
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then
+            flyDirection = flyDirection + (cam.CFrame.RightVector * flySpeed)
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.Space) then
+            flyDirection = flyDirection + Vector3.new(0, flySpeed, 0)
+        end
+        if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then
+            flyDirection = flyDirection - Vector3.new(0, flySpeed, 0)
+        end
+        
+        flyBV.Velocity = flyDirection
+        flyBG.CFrame = cam.CFrame
+    end
+end
+
+RunService.RenderStepped:Connect(flyControls)
 
 local function isEnemy(p)
     if not p or p == LP then return false end
@@ -433,7 +544,6 @@ RunService.RenderStepped:Connect(function()
                         espDistance[p].Visible = false
                     end
                     
-                    -- Update skeleton ESP
                     updateSkeletonESP(p, character)
                 else
                     espBoxes[p].Visible = false
@@ -441,7 +551,6 @@ RunService.RenderStepped:Connect(function()
                     espHealth[p].Visible = false
                     espDistance[p].Visible = false
                     
-                    -- Hide skeleton lines if not visible
                     if skeletonLines[p] then
                         for _, line in ipairs(skeletonLines[p]) do
                             line.Visible = false
@@ -580,6 +689,12 @@ local function makeToggle(name, y, settingKey)
         settings[settingKey] = not settings[settingKey]
         toggle.Text = name .. ": " .. (settings[settingKey] and "ON" or "OFF")
         toggle.BackgroundColor3 = settings[settingKey] and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 40)
+        
+        if settingKey == "flyEnabled" then
+            toggleFly()
+        elseif settingKey == "noclipEnabled" then
+            toggleNoclip()
+        end
     end)
     table.insert(uiElements, toggle)
 end
@@ -649,7 +764,7 @@ local function drawTabContent()
         makeToggle("ESP Names", baseY + spacing, "espNames")
         makeToggle("ESP Health", baseY + spacing*2, "espHealth")
         makeToggle("ESP Distance", baseY + spacing*3, "espDistance")
-        makeToggle("Skeleton ESP", baseY + spacing*4, "skeletonEsp") -- Added skeleton ESP toggle
+        makeToggle("Skeleton ESP", baseY + spacing*4, "skeletonEsp")
         makeSlider("ESP R", baseY + spacing*5, "espR", 0, 255)
         makeSlider("ESP G", baseY + spacing*6, "espG", 0, 255)
         makeSlider("ESP B", baseY + spacing*7, "espB", 0, 255)
@@ -660,6 +775,11 @@ local function drawTabContent()
             makeSlider("Speed", baseY + spacing*2, "speedValue", 16, 50)
         end
         makeToggle("Anti-Aim", baseY + spacing*4, "antiAimEnabled")
+        makeToggle("Fly", baseY + spacing*5, "flyEnabled")
+        if settings.flyEnabled then
+            makeSlider("Fly Speed", baseY + spacing*6, "flySpeed", 10, 100)
+        end
+        makeToggle("Noclip", baseY + spacing*7, "noclipEnabled")
     end
 end
 
@@ -738,4 +858,3 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
         Frame.Visible = settings.menuOpen
     end
 end)
-
