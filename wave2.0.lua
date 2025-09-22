@@ -284,23 +284,18 @@ local function isEnemy(p)
 end
 
 local skeletonConnections = {
-
     {"HumanoidRootPart", "LowerTorso"},
     {"LowerTorso", "UpperTorso"},
     {"UpperTorso", "Head"},
-    
     {"UpperTorso", "LeftUpperArm"},
     {"LeftUpperArm", "LeftLowerArm"},
     {"LeftLowerArm", "LeftHand"},
-    
     {"UpperTorso", "RightUpperArm"},
     {"RightUpperArm", "RightLowerArm"},
     {"RightLowerArm", "RightHand"},
-    
     {"LowerTorso", "LeftUpperLeg"},
     {"LeftUpperLeg", "LeftLowerLeg"},
     {"LeftLowerLeg", "LeftFoot"},
-    
     {"LowerTorso", "RightUpperLeg"},
     {"RightUpperLeg", "RightLowerLeg"},
     {"RightLowerLeg", "RightFoot"},
@@ -595,244 +590,56 @@ ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame", ScreenGui)
 Frame.Size = UDim2.new(0, 600, 0, 455)
-Frame.Position = UDim2.new(0.2, 0, 0.2, 0)
+Frame.Position = UDim2.new(0.5, -300, 0.5, -227.5)
 Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Frame.BorderSizePixel = 0
 Frame.Visible = settings.menuOpen
 Frame.Active = true
 Frame.Draggable = true
-Instance.new("UICorner", Frame)
 
-local title = Instance.new("TextLabel", Frame)
+local uiCorner = Instance.new("UICorner", Frame)
+uiCorner.CornerRadius = UDim.new(0, 8)
+
+local titleBar = Instance.new("Frame", Frame)
+titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(0, 102, 204)
+titleBar.BorderSizePixel = 0
+
+local titleBarCorner = Instance.new("UICorner", titleBar)
+titleBarCorner.CornerRadius = UDim.new(0, 8)
+
+local title = Instance.new("TextLabel", titleBar)
 title.Text = "Wave 2.0"
-title.Size = UDim2.new(1, 0, 0, 30)
+title.Size = UDim2.new(1, 0, 1, 0)
 title.BackgroundTransparency = 1
 title.TextColor3 = Color3.new(1, 1, 1)
 title.Font = Enum.Font.SourceSansBold
-title.TextSize = 20
+title.TextSize = 22
+title.TextStrokeTransparency = 0.5
+title.TextStrokeColor3 = Color3.fromRGB(0, 70, 140)
 
-local currentTab = "Aimbot"
-local uiElements = {}
-local function clearUI() 
-    for _, v in ipairs(uiElements) do 
-        v:Destroy() 
-    end 
-    uiElements = {} 
-end
+local tabContainer = Instance.new("Frame", Frame)
+tabContainer.Size = UDim2.new(1, -20, 0, 40)
+tabContainer.Position = UDim2.new(0, 10, 0, 50)
+tabContainer.BackgroundTransparency = 1
 
-local baseY = 70
-local spacing = 45
-
-local function makeSlider(name, y, settingKey, min, max, step)
-    step = step or 1
-    
-    local label = Instance.new("TextLabel", Frame)
-    label.Position = UDim2.new(0, 10, 0, y)
-    label.Size = UDim2.new(0, 280, 0, 20)
-    label.Text = name .. ": " .. tostring(settings[settingKey])
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.new(1,1,1)
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 16
-    table.insert(uiElements, label)
-
-    local slider = Instance.new("TextButton", Frame)
-    slider.Position = UDim2.new(0, 10, 0, y + 28)
-    slider.Size = UDim2.new(0, 280, 0, 15)
-    slider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    slider.Text = ""
-    table.insert(uiElements, slider)
-    
-    local fill = Instance.new("Frame", slider)
-    fill.Size = UDim2.new((settings[settingKey] - min) / (max - min), 0, 1, 0)
-    fill.Position = UDim2.new(0, 0, 0, 0)
-    fill.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-    fill.BorderSizePixel = 0
-    table.insert(uiElements, fill)
-
-    local dragging = false
-    slider.InputBegan:Connect(function(input) 
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then 
-            dragging = true 
-        end 
-    end)
-    
-    slider.InputEnded:Connect(function(input) 
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then 
-            dragging = false 
-        end 
-    end)
-    
-    slider.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local mouseX = input.Position.X
-            local relativeX = math.clamp(mouseX - slider.AbsolutePosition.X, 0, slider.AbsoluteSize.X)
-            local value = min + (max - min) * (relativeX / slider.AbsoluteSize.X)
-            value = math.floor(value / step) * step
-            settings[settingKey] = math.clamp(value, min, max)
-            label.Text = name .. ": " .. tostring(settings[settingKey])
-            fill.Size = UDim2.new((settings[settingKey] - min) / (max - min), 0, 1, 0)
-        end
-    end)
-end
-
-local function makeToggle(name, y, settingKey)
-    local toggle = Instance.new("TextButton", Frame)
-    toggle.Position = UDim2.new(0, 10, 0, y)
-    toggle.Size = UDim2.new(0, 130, 0, 25)
-    toggle.Text = name .. ": " .. (settings[settingKey] and "ON" or "OFF")
-    toggle.BackgroundColor3 = settings[settingKey] and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 40)
-    toggle.TextColor3 = Color3.new(1,1,1)
-    toggle.Font = Enum.Font.SourceSans
-    toggle.TextSize = 18
-    toggle.MouseButton1Click:Connect(function()
-        settings[settingKey] = not settings[settingKey]
-        toggle.Text = name .. ": " .. (settings[settingKey] and "ON" or "OFF")
-        toggle.BackgroundColor3 = settings[settingKey] and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 40)
-        
-        if settingKey == "flyEnabled" then
-            toggleFly()
-        elseif settingKey == "noclipEnabled" then
-            toggleNoclip()
-        end
-    end)
-    table.insert(uiElements, toggle)
-end
-
-local function makeDropdown(name, y, options, settingKey)
-    local label = Instance.new("TextLabel", Frame)
-    label.Position = UDim2.new(0, 10, 0, y)
-    label.Size = UDim2.new(0, 280, 0, 25)
-    label.Text = name .. ": " .. tostring(settings[settingKey])
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.new(1, 1, 1)
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 16
-    table.insert(uiElements, label)
-
-    local dropdown = Instance.new("TextButton", Frame)
-    dropdown.Position = UDim2.new(0, 10, 0, y + 25)
-    dropdown.Size = UDim2.new(0, 280, 0, 25)
-    dropdown.Text = "Change"
-    dropdown.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    dropdown.TextColor3 = Color3.new(1,1,1)
-    dropdown.Font = Enum.Font.SourceSans
-    dropdown.TextSize = 16
-    table.insert(uiElements, dropdown)
-
-    dropdown.MouseButton1Click:Connect(function()
-        local currentIndex = table.find(options, settings[settingKey]) or 1
-        local nextIndex = (currentIndex % #options) + 1
-        settings[settingKey] = options[nextIndex]
-        label.Text = name .. ": " .. tostring(settings[settingKey])
-    end)
-end
-
-local function drawTabContent()
-    clearUI()
-    if currentTab == "Aimbot" then
-        local leftX = 10
-        local rightX = 310
-        local y = baseY
-
-        makeToggle("Aimbot", y, "aimEnabled")
-        makeToggle("Team Check", y + spacing, "teamCheck")
-        makeToggle("Wall Check", y + spacing*2, "wallCheck")
-        makeToggle("Smooth Aim", y + spacing*3, "smoothAim")
-        makeSlider("Smoothness", y + spacing*4, "smoothness", 0.1, 1, 0.1)
-        makeSlider("FOV", y + spacing*5, "fov", 50, 300)
-        makeToggle("Show FOV", y + spacing*6, "fovVisible")
-
-        makeDropdown("Aim Part", y, {"Head", "HumanoidRootPart", "UpperTorso"}, "aimPart")
-        makeToggle("Prediction", y + spacing, "aimPrediction")
-        makeSlider("Prediction Amt", y + spacing*2, "predictionAmount", 0.05, 0.3, 0.05)
-        makeToggle("Trigger Bot", y + spacing*3, "triggerBot")
-        makeSlider("Trigger Delay", y + spacing*4, "triggerDelay", 0.05, 0.5, 0.05)
-
-        for _, v in ipairs(uiElements) do
-            if v:IsA("TextLabel") or v:IsA("TextButton") then
-                if v.Position.X.Offset == 10 and v.Position.Y.Offset >= baseY then
-                    if v.Text == "Aim Part: "..settings.aimPart or v.Text == "Change"
-                        or v.Text:find("Prediction") or v.Text:find("Trigger") then
-                        v.Position = v.Position + UDim2.new(0, rightX - leftX, 0, 0)
-                    end
-                end
-            end
-        end
-    elseif currentTab == "Visuals" then
-        makeToggle("ESP Boxes", baseY, "espEnabled")
-        makeToggle("ESP Names", baseY + spacing, "espNames")
-        makeToggle("ESP Health", baseY + spacing*2, "espHealth")
-        makeToggle("ESP Distance", baseY + spacing*3, "espDistance")
-        makeToggle("Skeleton ESP", baseY + spacing*4, "skeletonEsp")
-        makeSlider("ESP R", baseY + spacing*5, "espR", 0, 255)
-        makeSlider("ESP G", baseY + spacing*6, "espG", 0, 255)
-        makeSlider("ESP B", baseY + spacing*7, "espB", 0, 255)
-    elseif currentTab == "Misc" then
-        makeToggle("Bunnyhop", baseY, "bhopEnabled")
-        makeToggle("Speedhack", baseY + spacing, "speedhackEnabled")
-        if settings.speedhackEnabled then
-            makeSlider("Speed", baseY + spacing*2, "speedValue", 16, 50)
-        end
-        makeToggle("Anti-Aim", baseY + spacing*4, "antiAimEnabled")
-        makeToggle("Fly", baseY + spacing*5, "flyEnabled")
-        if settings.flyEnabled then
-            makeSlider("Fly Speed", baseY + spacing*6, "flySpeed", 10, 100)
-        end
-        makeToggle("Noclip", baseY + spacing*7, "noclipEnabled")
-    end
-end
-
-local function makeTabButton(name, x)
-    local btn = Instance.new("TextButton", Frame)
-    btn.Size = UDim2.new(0, 80, 0, 25)
-    btn.Position = UDim2.new(0, x, 0, 35)
-    btn.Text = name
-    btn.BackgroundColor3 = currentTab == name and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 40)
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 18
-    btn.AutoButtonColor = false
-    
-    btn.MouseEnter:Connect(function() 
-        if currentTab ~= name then
-            btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70) 
-        end
-    end)
-    
-    btn.MouseLeave:Connect(function() 
-        if currentTab ~= name then
-            btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40) 
-        end
-    end)
-    
-    btn.MouseButton1Click:Connect(function()
-        currentTab = name
-        drawTabContent()
-        
-        for _, child in ipairs(Frame:GetChildren()) do
-            if child:IsA("TextButton") and child ~= btn and child.Text ~= "Change" then
-                child.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-            end
-        end
-        
-        btn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-    end)
-    
-    return btn
-end
-
-local aimbotTab = makeTabButton("Aimbot", 10)
-local visualsTab = makeTabButton("Visuals", 100)
-local miscTab = makeTabButton("Misc", 190)
-drawTabContent()
+local contentContainer = Instance.new("ScrollingFrame", Frame)
+contentContainer.Size = UDim2.new(1, -20, 1, -160)
+contentContainer.Position = UDim2.new(0, 10, 0, 100)
+contentContainer.BackgroundTransparency = 1
+contentContainer.ScrollBarThickness = 6
+contentContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+contentContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
 local userFrame = Instance.new("Frame", Frame)
 userFrame.Size = UDim2.new(1, -20, 0, 60)
-userFrame.Position = UDim2.new(0, 10, 1, -65)
-userFrame.BackgroundTransparency = 0.5
-userFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-Instance.new("UICorner", userFrame)
+userFrame.Position = UDim2.new(0, 10, 1, -70)
+userFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+userFrame.BorderSizePixel = 0
+
+local userCorner = Instance.new("UICorner", userFrame)
+userCorner.CornerRadius = UDim.new(0, 6)
 
 local userImage = Instance.new("ImageLabel", userFrame)
 userImage.Size = UDim2.new(0, 50, 0, 50)
@@ -849,12 +656,476 @@ userNameLabel.BackgroundTransparency = 1
 userNameLabel.Text = LP.Name
 userNameLabel.Font = Enum.Font.SourceSansBold
 userNameLabel.TextColor3 = Color3.new(1, 1, 1)
-userNameLabel.TextSize = 24
+userNameLabel.TextSize = 20
 userNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local currentTab = "Aimbot"
+local uiElements = {}
+
+local function clearUI() 
+    for _, v in ipairs(uiElements) do 
+        if v:IsA("GuiObject") then
+            v:Destroy() 
+        end
+    end 
+    uiElements = {} 
+end
+
+local function createToggle(name, position, settingKey, parent)
+    local toggleFrame = Instance.new("Frame", parent)
+    toggleFrame.Size = UDim2.new(0, 280, 0, 35)
+    toggleFrame.Position = position
+    toggleFrame.BackgroundTransparency = 1
+    table.insert(uiElements, toggleFrame)
+
+    local label = Instance.new("TextLabel", toggleFrame)
+    label.Size = UDim2.new(0, 200, 1, 0)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.Font = Enum.Font.SourceSansSemibold
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local toggleBackground = Instance.new("Frame", toggleFrame)
+    toggleBackground.Size = UDim2.new(0, 50, 0, 25)
+    toggleBackground.Position = UDim2.new(1, -50, 0.5, -12.5)
+    toggleBackground.BackgroundColor3 = settings[settingKey] and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(60, 60, 60)
+    toggleBackground.BorderSizePixel = 0
+    
+    local toggleCorner = Instance.new("UICorner", toggleBackground)
+    toggleCorner.CornerRadius = UDim.new(0, 12)
+
+    local toggleButton = Instance.new("TextButton", toggleBackground)
+    toggleButton.Size = UDim2.new(0, 21, 0, 21)
+    toggleButton.Position = settings[settingKey] and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)
+    toggleButton.BackgroundColor3 = Color3.new(1, 1, 1)
+    toggleButton.Text = ""
+    toggleButton.BorderSizePixel = 0
+    
+    local buttonCorner = Instance.new("UICorner", toggleButton)
+    buttonCorner.CornerRadius = UDim.new(0, 10)
+
+    local function updateToggle()
+        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        
+        if settings[settingKey] then
+            local tween = TweenService:Create(toggleButton, tweenInfo, {Position = UDim2.new(1, -23, 0.5, -10.5)})
+            local bgTween = TweenService:Create(toggleBackground, tweenInfo, {BackgroundColor3 = Color3.fromRGB(0, 170, 0)})
+            tween:Play()
+            bgTween:Play()
+        else
+            local tween = TweenService:Create(toggleButton, tweenInfo, {Position = UDim2.new(0, 2, 0.5, -10.5)})
+            local bgTween = TweenService:Create(toggleBackground, tweenInfo, {BackgroundColor3 = Color3.fromRGB(60, 60, 60)})
+            tween:Play()
+            bgTween:Play()
+        end
+    end
+
+    toggleButton.MouseButton1Click:Connect(function()
+        settings[settingKey] = not settings[settingKey]
+        updateToggle()
+        
+        if settingKey == "flyEnabled" then
+            toggleFly()
+        elseif settingKey == "noclipEnabled" then
+            toggleNoclip()
+        end
+    end)
+
+    updateToggle()
+    return toggleFrame
+end
+
+local function createSlider(name, position, settingKey, min, max, step, parent)
+    step = step or 1
+    
+    local sliderFrame = Instance.new("Frame", parent)
+    sliderFrame.Size = UDim2.new(0, 280, 0, 50)
+    sliderFrame.Position = position
+    sliderFrame.BackgroundTransparency = 1
+    table.insert(uiElements, sliderFrame)
+
+    local label = Instance.new("TextLabel", sliderFrame)
+    label.Size = UDim2.new(1, 0, 0, 20)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name .. ": " .. tostring(settings[settingKey])
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.Font = Enum.Font.SourceSansSemibold
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local sliderBackground = Instance.new("Frame", sliderFrame)
+    sliderBackground.Size = UDim2.new(1, 0, 0, 15)
+    sliderBackground.Position = UDim2.new(0, 0, 1, -20)
+    sliderBackground.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    sliderBackground.BorderSizePixel = 0
+    
+    local bgCorner = Instance.new("UICorner", sliderBackground)
+    bgCorner.CornerRadius = UDim.new(0, 7)
+
+    local sliderFill = Instance.new("Frame", sliderBackground)
+    sliderFill.Size = UDim2.new((settings[settingKey] - min) / (max - min), 0, 1, 0)
+    sliderFill.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+    sliderFill.BorderSizePixel = 0
+    
+    local fillCorner = Instance.new("UICorner", sliderFill)
+    fillCorner.CornerRadius = UDim.new(0, 7)
+
+    local sliderButton = Instance.new("TextButton", sliderBackground)
+    sliderButton.Size = UDim2.new(0, 20, 0, 20)
+    sliderButton.Position = UDim2.new((settings[settingKey] - min) / (max - min), -10, 0.5, -10)
+    sliderButton.BackgroundColor3 = Color3.new(1, 1, 1)
+    sliderButton.Text = ""
+    sliderButton.BorderSizePixel = 0
+    sliderButton.ZIndex = 2
+    
+    local buttonCorner = Instance.new("UICorner", sliderButton)
+    buttonCorner.CornerRadius = UDim.new(0, 10)
+
+    local dragging = false
+
+    local function updateSlider(value)
+        value = math.floor(value / step) * step
+        settings[settingKey] = math.clamp(value, min, max)
+        label.Text = name .. ": " .. tostring(settings[settingKey])
+        
+        local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local fillTween = TweenService:Create(sliderFill, tweenInfo, {Size = UDim2.new((settings[settingKey] - min) / (max - min), 0, 1, 0)})
+        local buttonTween = TweenService:Create(sliderButton, tweenInfo, {Position = UDim2.new((settings[settingKey] - min) / (max - min), -10, 0.5, -10)})
+        fillTween:Play()
+        buttonTween:Play()
+    end
+
+    sliderButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then 
+            dragging = true 
+        end 
+    end)
+    
+    sliderButton.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then 
+            dragging = false 
+        end 
+    end)
+    
+    sliderBackground.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then 
+            dragging = true
+            local relativeX = (input.Position.X - sliderBackground.AbsolutePosition.X) / sliderBackground.AbsoluteSize.X
+            local value = min + (max - min) * relativeX
+            updateSlider(value)
+        end 
+    end)
+    
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local relativeX = (input.Position.X - sliderBackground.AbsolutePosition.X) / sliderBackground.AbsoluteSize.X
+            local value = min + (max - min) * math.clamp(relativeX, 0, 1)
+            updateSlider(value)
+        end
+    end)
+
+    return sliderFrame
+end
+
+local function createDropdown(name, position, options, settingKey, parent)
+    local dropdownFrame = Instance.new("Frame", parent)
+    dropdownFrame.Size = UDim2.new(0, 280, 0, 50)
+    dropdownFrame.Position = position
+    dropdownFrame.BackgroundTransparency = 1
+    table.insert(uiElements, dropdownFrame)
+
+    local label = Instance.new("TextLabel", dropdownFrame)
+    label.Size = UDim2.new(1, 0, 0, 20)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name .. ": " .. tostring(settings[settingKey])
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.Font = Enum.Font.SourceSansSemibold
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+
+    local dropdownButton = Instance.new("TextButton", dropdownFrame)
+    dropdownButton.Size = UDim2.new(1, 0, 0, 25)
+    dropdownButton.Position = UDim2.new(0, 0, 1, -25)
+    dropdownButton.Text = "▼ " .. tostring(settings[settingKey])
+    dropdownButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    dropdownButton.TextColor3 = Color3.new(1, 1, 1)
+    dropdownButton.Font = Enum.Font.SourceSans
+    dropdownButton.TextSize = 14
+    dropdownButton.BorderSizePixel = 0
+    
+    local buttonCorner = Instance.new("UICorner", dropdownButton)
+    buttonCorner.CornerRadius = UDim.new(0, 4)
+
+    dropdownButton.MouseButton1Click:Connect(function()
+        local currentIndex = table.find(options, settings[settingKey]) or 1
+        local nextIndex = (currentIndex % #options) + 1
+        settings[settingKey] = options[nextIndex]
+        label.Text = name .. ": " .. tostring(settings[settingKey])
+        dropdownButton.Text = "▼ " .. tostring(settings[settingKey])
+        
+        local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+        local scaleTween = TweenService:Create(dropdownButton, tweenInfo, {Size = UDim2.new(0.95, 0, 0, 23)})
+        scaleTween:Play()
+        task.wait(0.1)
+        local scaleBack = TweenService:Create(dropdownButton, tweenInfo, {Size = UDim2.new(1, 0, 0, 25)})
+        scaleBack:Play()
+    end)
+
+    return dropdownFrame
+end
+
+local function drawTabContent()
+    clearUI()
+    
+    local yOffset = 0
+    local spacing = 40
+    
+    if currentTab == "Aimbot" then
+        createToggle("Aimbot", UDim2.new(0, 0, 0, yOffset), "aimEnabled", contentContainer)
+        yOffset = yOffset + spacing
+        createToggle("Team Check", UDim2.new(0, 0, 0, yOffset), "teamCheck", contentContainer)
+        yOffset = yOffset + spacing
+        createToggle("Wall Check", UDim2.new(0, 0, 0, yOffset), "wallCheck", contentContainer)
+        yOffset = yOffset + spacing
+        createToggle("Smooth Aim", UDim2.new(0, 0, 0, yOffset), "smoothAim", contentContainer)
+        yOffset = yOffset + spacing
+        createSlider("Smoothness", UDim2.new(0, 0, 0, yOffset), "smoothness", 0.1, 1, 0.1, contentContainer)
+        yOffset = yOffset + spacing + 10
+        createSlider("FOV", UDim2.new(0, 0, 0, yOffset), "fov", 50, 300, 1, contentContainer)
+        yOffset = yOffset + spacing + 10
+        createToggle("Show FOV", UDim2.new(0, 0, 0, yOffset), "fovVisible", contentContainer)
+        yOffset = yOffset + spacing
+        
+        createDropdown("Aim Part", UDim2.new(0, 290, 0, 0), {"Head", "HumanoidRootPart", "UpperTorso"}, "aimPart", contentContainer)
+        yOffset = 40
+        createToggle("Prediction", UDim2.new(0, 290, 0, yOffset), "aimPrediction", contentContainer)
+        yOffset = yOffset + spacing
+        createSlider("Prediction Amt", UDim2.new(0, 290, 0, yOffset), "predictionAmount", 0.05, 0.3, 0.05, contentContainer)
+        yOffset = yOffset + spacing + 10
+        createToggle("Trigger Bot", UDim2.new(0, 290, 0, yOffset), "triggerBot", contentContainer)
+        yOffset = yOffset + spacing
+        createSlider("Trigger Delay", UDim2.new(0, 290, 0, yOffset), "triggerDelay", 0.05, 0.5, 0.05, contentContainer)
+        
+    elseif currentTab == "Visuals" then
+        createToggle("ESP Boxes", UDim2.new(0, 0, 0, yOffset), "espEnabled", contentContainer)
+        yOffset = yOffset + spacing
+        createToggle("ESP Names", UDim2.new(0, 0, 0, yOffset), "espNames", contentContainer)
+        yOffset = yOffset + spacing
+        createToggle("ESP Health", UDim2.new(0, 0, 0, yOffset), "espHealth", contentContainer)
+        yOffset = yOffset + spacing
+        createToggle("ESP Distance", UDim2.new(0, 0, 0, yOffset), "espDistance", contentContainer)
+        yOffset = yOffset + spacing
+        createToggle("Skeleton ESP", UDim2.new(0, 0, 0, yOffset), "skeletonEsp", contentContainer)
+        yOffset = yOffset + spacing
+        createSlider("ESP R", UDim2.new(0, 0, 0, yOffset), "espR", 0, 255, 1, contentContainer)
+        yOffset = yOffset + spacing + 10
+        createSlider("ESP G", UDim2.new(0, 0, 0, yOffset), "espG", 0, 255, 1, contentContainer)
+        yOffset = yOffset + spacing + 10
+        createSlider("ESP B", UDim2.new(0, 0, 0, yOffset), "espB", 0, 255, 1, contentContainer)
+        
+    elseif currentTab == "Misc" then
+        createToggle("Bunnyhop", UDim2.new(0, 0, 0, yOffset), "bhopEnabled", contentContainer)
+        yOffset = yOffset + spacing
+        createToggle("Speedhack", UDim2.new(0, 0, 0, yOffset), "speedhackEnabled", contentContainer)
+        yOffset = yOffset + spacing
+        if settings.speedhackEnabled then
+            createSlider("Speed", UDim2.new(0, 0, 0, yOffset), "speedValue", 16, 50, 1, contentContainer)
+            yOffset = yOffset + spacing + 10
+        end
+        createToggle("Anti-Aim", UDim2.new(0, 0, 0, yOffset), "antiAimEnabled", contentContainer)
+        yOffset = yOffset + spacing
+        createToggle("Fly", UDim2.new(0, 0, 0, yOffset), "flyEnabled", contentContainer)
+        yOffset = yOffset + spacing
+        if settings.flyEnabled then
+            createSlider("Fly Speed", UDim2.new(0, 0, 0, yOffset), "flySpeed", 10, 100, 1, contentContainer)
+            yOffset = yOffset + spacing + 10
+        end
+        createToggle("Noclip", UDim2.new(0, 0, 0, yOffset), "noclipEnabled", contentContainer)
+        yOffset = yOffset + spacing
+        createToggle("Menu Keybind", UDim2.new(0, 0, 0, yOffset), "menuOpen", contentContainer)
+    end
+end
+
+local function createTabButton(name, xPosition)
+    local tabButton = Instance.new("TextButton", tabContainer)
+    tabButton.Size = UDim2.new(0, 120, 1, 0)
+    tabButton.Position = UDim2.new(0, xPosition, 0, 0)
+    tabButton.Text = name
+    tabButton.BackgroundColor3 = currentTab == name and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 40)
+    tabButton.TextColor3 = Color3.new(1, 1, 1)
+    tabButton.Font = Enum.Font.SourceSansSemibold
+    tabButton.TextSize = 16
+    tabButton.BorderSizePixel = 0
+    tabButton.AutoButtonColor = false
+    
+    local tabCorner = Instance.new("UICorner", tabButton)
+    tabCorner.CornerRadius = UDim.new(0, 6)
+    
+    tabButton.MouseEnter:Connect(function()
+        if currentTab ~= name then
+            local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            local tween = TweenService:Create(tabButton, tweenInfo, {BackgroundColor3 = Color3.fromRGB(70, 70, 70)})
+            tween:Play()
+        end
+    end)
+    
+    tabButton.MouseLeave:Connect(function()
+        if currentTab ~= name then
+            local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            local tween = TweenService:Create(tabButton, tweenInfo, {BackgroundColor3 = Color3.fromRGB(40, 40, 40)})
+            tween:Play()
+        end
+    end)
+    
+    tabButton.MouseButton1Click:Connect(function()
+        currentTab = name
+        
+        for _, child in ipairs(tabContainer:GetChildren()) do
+            if child:IsA("TextButton") then
+                local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+                if child == tabButton then
+                    local tween = TweenService:Create(child, tweenInfo, {BackgroundColor3 = Color3.fromRGB(0, 120, 255)})
+                    tween:Play()
+                else
+                    local tween = TweenService:Create(child, tweenInfo, {BackgroundColor3 = Color3.fromRGB(40, 40, 40)})
+                    tween:Play()
+                end
+            end
+        end
+        
+        local scaleTween = TweenService:Create(tabButton, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 115, 1, -5)})
+        scaleTween:Play()
+        task.wait(0.1)
+        local scaleBack = TweenService:Create(tabButton, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 120, 1, 0)})
+        scaleBack:Play()
+        
+        drawTabContent()
+    end)
+    
+    return tabButton
+end
+
+local aimbotTab = createTabButton("Aimbot", 0)
+local visualsTab = createTabButton("Visuals", 125)
+local miscTab = createTabButton("Misc", 250)
+drawTabContent()
 
 UIS.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.Insert then
         settings.menuOpen = not settings.menuOpen
-        Frame.Visible = settings.menuOpen
+        
+        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+        if settings.menuOpen then
+            Frame.Visible = true
+            local tween = TweenService:Create(Frame, tweenInfo, {Position = UDim2.new(0.5, -300, 0.5, -227.5), Size = UDim2.new(0, 600, 0, 455)})
+            tween:Play()
+        else
+            local tween = TweenService:Create(Frame, tweenInfo, {Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 0, 0, 0)})
+            tween:Play()
+            tween.Completed:Connect(function()
+                Frame.Visible = false
+            end)
+        end
     end
 end)
+
+local function cleanup()
+    for _, drawing in ipairs(drawings) do
+        drawing:Remove()
+    end
+    
+    if connection then
+        connection:Disconnect()
+    end
+    
+    if flyBV then
+        flyBV:Destroy()
+    end
+    
+    if flyBG then
+        flyBG:Destroy()
+    end
+    
+    ScreenGui:Destroy()
+end
+
+game:GetService("CoreGui").ChildRemoved:Connect(function(child)
+    if child == ScreenGui then
+        cleanup()
+    end
+end)
+
+LP.CharacterRemoving:Connect(cleanup)
+
+task.spawn(function()
+
+    ContentProvider:PreloadAsync({userImage.Image})
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LP then
+            createESP(player)
+        end
+    end
+    
+    Players.PlayerAdded:Connect(function(player)
+        createESP(player)
+    end)
+    
+    flySpeed = settings.flySpeed
+    
+    while true do
+
+        if flySpeed ~= settings.flySpeed then
+            flySpeed = settings.flySpeed
+        end
+        
+        fovCircle.Visible = settings.fovVisible
+        fovCircle.Radius = settings.fov
+        fovCircle.Color = Color3.new(1, 1, 1)
+        
+        settings.espColor = Color3.fromRGB(settings.espR, settings.espG, settings.espB)
+        
+        task.wait(0.1)
+    end
+end)
+
+local function safeCall(func)
+    local success, result = pcall(func)
+    if not success then
+        warn("Error in safeCall: " .. tostring(result))
+    end
+    return result
+end
+
+game:BindToClose(function()
+    cleanup()
+    
+    if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+        LP.Character.Humanoid.PlatformStand = false
+        LP.Character.Humanoid.WalkSpeed = 16
+    end
+    
+    for _, drawing in ipairs(drawings) do
+        pcall(function()
+            drawing:Remove()
+        end)
+    end
+end)
+
+local function updateUIScale()
+    local viewportSize = Camera.ViewportSize
+    local scale = math.min(viewportSize.X / 1920, viewportSize.Y / 1080)
+    
+    Frame.Size = UDim2.new(0, 600 * scale, 0, 455 * scale)
+    Frame.Position = UDim2.new(0.5, -300 * scale, 0.5, -227.5 * scale)
+end
+
+Camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateUIScale)
+updateUIScale()
+
+return settings
