@@ -6,9 +6,15 @@ local TweenService = game:GetService("TweenService")
 local Camera = workspace.CurrentCamera
 local LP = Players.LocalPlayer
 
-local splashGui = Instance.new("ScreenGui", game.CoreGui)
+if not game:GetService("CoreGui") then
+    warn("CoreGui not accessible")
+    return
+end
+
+local splashGui = Instance.new("ScreenGui")
 splashGui.Name = "WaveSplash"
 splashGui.ResetOnSpawn = false
+splashGui.Parent = game:GetService("CoreGui")
 
 local letters = {"W", "a", "v", "e", " ", "2", ".", "0"}
 local colors = {
@@ -28,7 +34,7 @@ local letterWidth = totalWidth / #letters
 local height = 100
 
 for i, letter in ipairs(letters) do
-    local lbl = Instance.new("TextLabel", splashGui)
+    local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(0, letterWidth, 0, height)
     lbl.Position = UDim2.new(0.5, -totalWidth/2 + (i-1)*letterWidth, 0.5, -height/2)
     lbl.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -40,6 +46,7 @@ for i, letter in ipairs(letters) do
     lbl.TextStrokeTransparency = 0.5
     lbl.TextStrokeColor3 = Color3.fromRGB(0, 70, 140)
     lbl.TextTransparency = 1
+    lbl.Parent = splashGui
     letterLabels[i] = lbl
 end
 
@@ -138,13 +145,22 @@ local espDistance = {}
 local skeletonLines = {}
 local drawings = {}
 
-local fovCircle = Drawing.new("Circle")
-fovCircle.Filled = false
-fovCircle.Transparency = 0.6
-fovCircle.Thickness = 1
-fovCircle.Visible = settings.fovVisible
-fovCircle.Color = Color3.new(1, 1, 1)
-table.insert(drawings, fovCircle)
+local function createDrawing(type)
+    local success, drawing = pcall(function()
+        return Drawing.new(type)
+    end)
+    return success and drawing or nil
+end
+
+local fovCircle = createDrawing("Circle")
+if fovCircle then
+    fovCircle.Filled = false
+    fovCircle.Transparency = 0.6
+    fovCircle.Thickness = 1
+    fovCircle.Visible = settings.fovVisible
+    fovCircle.Color = Color3.new(1, 1, 1)
+    table.insert(drawings, fovCircle)
+end
 
 local aiming = false
 UIS.InputBegan:Connect(function(input)
@@ -304,78 +320,88 @@ local skeletonConnections = {
 local function createESP(player)
     if espBoxes[player] then return end
     
-    local box = Drawing.new("Square")
-    box.Thickness = 1
-    box.Filled = false
-    box.Transparency = 1
-    box.Visible = false
-    box.Color = settings.espColor
-    espBoxes[player] = box
-    table.insert(drawings, box)
+    local box = createDrawing("Square")
+    if box then
+        box.Thickness = 1
+        box.Filled = false
+        box.Transparency = 1
+        box.Visible = false
+        box.Color = settings.espColor
+        espBoxes[player] = box
+        table.insert(drawings, box)
+    end
     
-    local name = Drawing.new("Text")
-    name.Text = player.Name
-    name.Size = 16
-    name.Center = true
-    name.Outline = true
-    name.OutlineColor = Color3.new(0, 0, 0)
-    name.Visible = false
-    name.Color = Color3.new(1, 1, 1)
-    espNames[player] = name
-    table.insert(drawings, name)
+    local name = createDrawing("Text")
+    if name then
+        name.Text = player.Name
+        name.Size = 16
+        name.Center = true
+        name.Outline = true
+        name.OutlineColor = Color3.new(0, 0, 0)
+        name.Visible = false
+        name.Color = Color3.new(1, 1, 1)
+        espNames[player] = name
+        table.insert(drawings, name)
+    end
     
-    local health = Drawing.new("Text")
-    health.Size = 14
-    name.Center = true
-    health.Outline = true
-    health.OutlineColor = Color3.new(0, 0, 0)
-    health.Visible = false
-    health.Color = Color3.new(1, 1, 1)
-    espHealth[player] = health
-    table.insert(drawings, health)
+    local health = createDrawing("Text")
+    if health then
+        health.Size = 14
+        health.Center = true
+        health.Outline = true
+        health.OutlineColor = Color3.new(0, 0, 0)
+        health.Visible = false
+        health.Color = Color3.new(1, 1, 1)
+        espHealth[player] = health
+        table.insert(drawings, health)
+    end
     
-    local distance = Drawing.new("Text")
-    distance.Size = 14
-    distance.Center = true
-    distance.Outline = true
-    distance.OutlineColor = Color3.new(0, 0, 0)
-    distance.Visible = false
-    distance.Color = Color3.new(1, 1, 1)
-    espDistance[player] = distance
-    table.insert(drawings, distance)
+    local distance = createDrawing("Text")
+    if distance then
+        distance.Size = 14
+        distance.Center = true
+        distance.Outline = true
+        distance.OutlineColor = Color3.new(0, 0, 0)
+        distance.Visible = false
+        distance.Color = Color3.new(1, 1, 1)
+        espDistance[player] = distance
+        table.insert(drawings, distance)
+    end
     
     skeletonLines[player] = {}
     for i = 1, #skeletonConnections do
-        local line = Drawing.new("Line")
-        line.Thickness = 1
-        line.Visible = false
-        line.Color = settings.espColor
-        table.insert(skeletonLines[player], line)
-        table.insert(drawings, line)
+        local line = createDrawing("Line")
+        if line then
+            line.Thickness = 1
+            line.Visible = false
+            line.Color = settings.espColor
+            table.insert(skeletonLines[player], line)
+            table.insert(drawings, line)
+        end
     end
 end
 
 local function removeESP(player)
     if espBoxes[player] then
-        espBoxes[player]:Remove()
+        pcall(function() espBoxes[player]:Remove() end)
         espBoxes[player] = nil
     end
     if espNames[player] then
-        espNames[player]:Remove()
+        pcall(function() espNames[player]:Remove() end)
         espNames[player] = nil
     end
     if espHealth[player] then
-        espHealth[player]:Remove()
+        pcall(function() espHealth[player]:Remove() end)
         espHealth[player] = nil
     end
     if espDistance[player] then
-        espDistance[player]:Remove()
+        pcall(function() espDistance[player]:Remove() end)
         espDistance[player] = nil
     end
 
     if skeletonLines[player] then
         for _, line in ipairs(skeletonLines[player]) do
-            line:Remove()
+            pcall(function() line:Remove() end)
         end
         skeletonLines[player] = nil
     end
@@ -388,7 +414,7 @@ local function updateSkeletonESP(player, character)
         local part1 = character:FindFirstChild(connection[1])
         local part2 = character:FindFirstChild(connection[2])
         
-        if part1 and part2 then
+        if part1 and part2 and skeletonLines[player][i] then
             local pos1, vis1 = Camera:WorldToViewportPoint(part1.Position)
             local pos2, vis2 = Camera:WorldToViewportPoint(part2.Position)
             
@@ -400,7 +426,7 @@ local function updateSkeletonESP(player, character)
             else
                 skeletonLines[player][i].Visible = false
             end
-        else
+        elseif skeletonLines[player][i] then
             skeletonLines[player][i].Visible = false
         end
     end
@@ -468,7 +494,9 @@ RunService.Heartbeat:Connect(function()
         if target and target.Character and target.Character:FindFirstChild("Humanoid") then
             local humanoid = target.Character.Humanoid
             if humanoid.Health > 0 then
-                mouse1click()
+                pcall(function()
+                    mouse1click()
+                end)
                 lastTriggerTime = tick()
             end
         end
@@ -477,9 +505,12 @@ end)
 
 RunService.RenderStepped:Connect(function()
     settings.espColor = Color3.fromRGB(settings.espR, settings.espG, settings.espB)
-    fovCircle.Position = UIS:GetMouseLocation()
-    fovCircle.Radius = settings.fov
-    fovCircle.Visible = settings.fovVisible
+    
+    if fovCircle then
+        fovCircle.Position = UIS:GetMouseLocation()
+        fovCircle.Radius = settings.fov
+        fovCircle.Visible = settings.fovVisible
+    end
 
     for _, p in ipairs(Players:GetPlayers()) do
         if isEnemy(p) then
@@ -497,23 +528,24 @@ RunService.RenderStepped:Connect(function()
                     local size = Vector2.new(40 * scale, 80 * scale)
                     local boxPos = Vector2.new(pos.X - size.X/2, pos.Y - size.Y/2)
                     
-                    if settings.espEnabled then
+                    if settings.espEnabled and espBoxes[p] then
                         espBoxes[p].Position = boxPos
                         espBoxes[p].Size = size
                         espBoxes[p].Visible = true
                         espBoxes[p].Color = settings.espColor
-                    else
+                    elseif espBoxes[p] then
                         espBoxes[p].Visible = false
                     end
                     
-                    if settings.espNames then
+                    if settings.espNames and espNames[p] then
                         espNames[p].Position = Vector2.new(pos.X, pos.Y - size.Y/2 - 20)
                         espNames[p].Visible = true
-                    else
+                        espNames[p].Text = p.Name
+                    elseif espNames[p] then
                         espNames[p].Visible = false
                     end
                     
-                    if settings.espHealth then
+                    if settings.espHealth and espHealth[p] then
                         espHealth[p].Text = "HP: " .. math.floor(humanoid.Health)
                         espHealth[p].Position = Vector2.new(pos.X, pos.Y + size.Y/2 + 5)
                         espHealth[p].Visible = true
@@ -526,25 +558,25 @@ RunService.RenderStepped:Connect(function()
                         else
                             espHealth[p].Color = Color3.new(1, 0, 0)
                         end
-                    else
+                    elseif espHealth[p] then
                         espHealth[p].Visible = false
                     end
                     
-                    if settings.espDistance then
+                    if settings.espDistance and espDistance[p] and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
                         local distance = (root.Position - LP.Character.HumanoidRootPart.Position).Magnitude
                         espDistance[p].Text = math.floor(distance) .. " studs"
                         espDistance[p].Position = Vector2.new(pos.X, pos.Y + size.Y/2 + 25)
                         espDistance[p].Visible = true
-                    else
+                    elseif espDistance[p] then
                         espDistance[p].Visible = false
                     end
                     
                     updateSkeletonESP(p, character)
                 else
-                    espBoxes[p].Visible = false
-                    espNames[p].Visible = false
-                    espHealth[p].Visible = false
-                    espDistance[p].Visible = false
+                    if espBoxes[p] then espBoxes[p].Visible = false end
+                    if espNames[p] then espNames[p].Visible = false end
+                    if espHealth[p] then espHealth[p].Visible = false end
+                    if espDistance[p] then espDistance[p].Visible = false end
                     
                     if skeletonLines[p] then
                         for _, line in ipairs(skeletonLines[p]) do
@@ -584,11 +616,12 @@ Players.PlayerRemoving:Connect(function(player)
     removeESP(player)
 end)
 
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "WaveMenu"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:GetService("CoreGui")
 
-local Frame = Instance.new("Frame", ScreenGui)
+local Frame = Instance.new("Frame")
 Frame.Size = UDim2.new(0, 600, 0, 455)
 Frame.Position = UDim2.new(0.5, -300, 0.5, -227.5)
 Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -596,20 +629,24 @@ Frame.BorderSizePixel = 0
 Frame.Visible = settings.menuOpen
 Frame.Active = true
 Frame.Draggable = true
+Frame.Parent = ScreenGui
 
-local uiCorner = Instance.new("UICorner", Frame)
+local uiCorner = Instance.new("UICorner")
 uiCorner.CornerRadius = UDim.new(0, 8)
+uiCorner.Parent = Frame
 
-local titleBar = Instance.new("Frame", Frame)
+local titleBar = Instance.new("Frame")
 titleBar.Size = UDim2.new(1, 0, 0, 40)
 titleBar.Position = UDim2.new(0, 0, 0, 0)
 titleBar.BackgroundColor3 = Color3.fromRGB(0, 102, 204)
 titleBar.BorderSizePixel = 0
+titleBar.Parent = Frame
 
-local titleBarCorner = Instance.new("UICorner", titleBar)
+local titleBarCorner = Instance.new("UICorner")
 titleBarCorner.CornerRadius = UDim.new(0, 8)
+titleBarCorner.Parent = titleBar
 
-local title = Instance.new("TextLabel", titleBar)
+local title = Instance.new("TextLabel")
 title.Text = "Wave 2.0"
 title.Size = UDim2.new(1, 0, 1, 0)
 title.BackgroundTransparency = 1
@@ -618,38 +655,43 @@ title.Font = Enum.Font.SourceSansBold
 title.TextSize = 22
 title.TextStrokeTransparency = 0.5
 title.TextStrokeColor3 = Color3.fromRGB(0, 70, 140)
+title.Parent = titleBar
 
-local tabContainer = Instance.new("Frame", Frame)
+local tabContainer = Instance.new("Frame")
 tabContainer.Size = UDim2.new(1, -20, 0, 40)
 tabContainer.Position = UDim2.new(0, 10, 0, 50)
 tabContainer.BackgroundTransparency = 1
+tabContainer.Parent = Frame
 
-local contentContainer = Instance.new("ScrollingFrame", Frame)
+local contentContainer = Instance.new("ScrollingFrame")
 contentContainer.Size = UDim2.new(1, -20, 1, -160)
 contentContainer.Position = UDim2.new(0, 10, 0, 100)
 contentContainer.BackgroundTransparency = 1
 contentContainer.ScrollBarThickness = 6
 contentContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
 contentContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+contentContainer.Parent = Frame
 
-local userFrame = Instance.new("Frame", Frame)
+local userFrame = Instance.new("Frame")
 userFrame.Size = UDim2.new(1, -20, 0, 60)
 userFrame.Position = UDim2.new(0, 10, 1, -70)
 userFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 userFrame.BorderSizePixel = 0
+userFrame.Parent = Frame
 
-local userCorner = Instance.new("UICorner", userFrame)
+local userCorner = Instance.new("UICorner")
 userCorner.CornerRadius = UDim.new(0, 6)
+userCorner.Parent = userFrame
 
-local userImage = Instance.new("ImageLabel", userFrame)
+local userImage = Instance.new("ImageLabel")
 userImage.Size = UDim2.new(0, 50, 0, 50)
 userImage.Position = UDim2.new(0, 5, 0.5, -25)
 userImage.BackgroundTransparency = 1
 userImage.Image = LP.UserId and ("https://www.roblox.com/headshot-thumbnail/image?userId="..LP.UserId.."&width=48&height=48&format=png") or ""
 userImage.ScaleType = Enum.ScaleType.Fit
-ContentProvider:PreloadAsync({userImage.Image})
+userImage.Parent = userFrame
 
-local userNameLabel = Instance.new("TextLabel", userFrame)
+local userNameLabel = Instance.new("TextLabel")
 userNameLabel.Size = UDim2.new(0, 200, 0, 50)
 userNameLabel.Position = UDim2.new(0, 65, 0, 0)
 userNameLabel.BackgroundTransparency = 1
@@ -658,6 +700,7 @@ userNameLabel.Font = Enum.Font.SourceSansBold
 userNameLabel.TextColor3 = Color3.new(1, 1, 1)
 userNameLabel.TextSize = 20
 userNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+userNameLabel.Parent = userFrame
 
 local currentTab = "Aimbot"
 local uiElements = {}
@@ -672,13 +715,14 @@ local function clearUI()
 end
 
 local function createToggle(name, position, settingKey, parent)
-    local toggleFrame = Instance.new("Frame", parent)
+    local toggleFrame = Instance.new("Frame")
     toggleFrame.Size = UDim2.new(0, 280, 0, 35)
     toggleFrame.Position = position
     toggleFrame.BackgroundTransparency = 1
+    toggleFrame.Parent = parent
     table.insert(uiElements, toggleFrame)
 
-    local label = Instance.new("TextLabel", toggleFrame)
+    local label = Instance.new("TextLabel")
     label.Size = UDim2.new(0, 200, 1, 0)
     label.Position = UDim2.new(0, 0, 0, 0)
     label.BackgroundTransparency = 1
@@ -687,25 +731,30 @@ local function createToggle(name, position, settingKey, parent)
     label.Font = Enum.Font.SourceSansSemibold
     label.TextSize = 16
     label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = toggleFrame
 
-    local toggleBackground = Instance.new("Frame", toggleFrame)
+    local toggleBackground = Instance.new("Frame")
     toggleBackground.Size = UDim2.new(0, 50, 0, 25)
     toggleBackground.Position = UDim2.new(1, -50, 0.5, -12.5)
     toggleBackground.BackgroundColor3 = settings[settingKey] and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(60, 60, 60)
     toggleBackground.BorderSizePixel = 0
+    toggleBackground.Parent = toggleFrame
     
-    local toggleCorner = Instance.new("UICorner", toggleBackground)
+    local toggleCorner = Instance.new("UICorner")
     toggleCorner.CornerRadius = UDim.new(0, 12)
+    toggleCorner.Parent = toggleBackground
 
-    local toggleButton = Instance.new("TextButton", toggleBackground)
+    local toggleButton = Instance.new("TextButton")
     toggleButton.Size = UDim2.new(0, 21, 0, 21)
     toggleButton.Position = settings[settingKey] and UDim2.new(1, -23, 0.5, -10.5) or UDim2.new(0, 2, 0.5, -10.5)
     toggleButton.BackgroundColor3 = Color3.new(1, 1, 1)
     toggleButton.Text = ""
     toggleButton.BorderSizePixel = 0
+    toggleButton.Parent = toggleBackground
     
-    local buttonCorner = Instance.new("UICorner", toggleButton)
+    local buttonCorner = Instance.new("UICorner")
     buttonCorner.CornerRadius = UDim.new(0, 10)
+    buttonCorner.Parent = toggleButton
 
     local function updateToggle()
         local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -741,13 +790,14 @@ end
 local function createSlider(name, position, settingKey, min, max, step, parent)
     step = step or 1
     
-    local sliderFrame = Instance.new("Frame", parent)
+    local sliderFrame = Instance.new("Frame")
     sliderFrame.Size = UDim2.new(0, 280, 0, 50)
     sliderFrame.Position = position
     sliderFrame.BackgroundTransparency = 1
+    sliderFrame.Parent = parent
     table.insert(uiElements, sliderFrame)
 
-    local label = Instance.new("TextLabel", sliderFrame)
+    local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 0, 20)
     label.Position = UDim2.new(0, 0, 0, 0)
     label.BackgroundTransparency = 1
@@ -756,34 +806,41 @@ local function createSlider(name, position, settingKey, min, max, step, parent)
     label.Font = Enum.Font.SourceSansSemibold
     label.TextSize = 16
     label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = sliderFrame
 
-    local sliderBackground = Instance.new("Frame", sliderFrame)
+    local sliderBackground = Instance.new("Frame")
     sliderBackground.Size = UDim2.new(1, 0, 0, 15)
     sliderBackground.Position = UDim2.new(0, 0, 1, -20)
     sliderBackground.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     sliderBackground.BorderSizePixel = 0
+    sliderBackground.Parent = sliderFrame
     
-    local bgCorner = Instance.new("UICorner", sliderBackground)
+    local bgCorner = Instance.new("UICorner")
     bgCorner.CornerRadius = UDim.new(0, 7)
+    bgCorner.Parent = sliderBackground
 
-    local sliderFill = Instance.new("Frame", sliderBackground)
+    local sliderFill = Instance.new("Frame")
     sliderFill.Size = UDim2.new((settings[settingKey] - min) / (max - min), 0, 1, 0)
     sliderFill.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
     sliderFill.BorderSizePixel = 0
+    sliderFill.Parent = sliderBackground
     
-    local fillCorner = Instance.new("UICorner", sliderFill)
+    local fillCorner = Instance.new("UICorner")
     fillCorner.CornerRadius = UDim.new(0, 7)
+    fillCorner.Parent = sliderFill
 
-    local sliderButton = Instance.new("TextButton", sliderBackground)
+    local sliderButton = Instance.new("TextButton")
     sliderButton.Size = UDim2.new(0, 20, 0, 20)
     sliderButton.Position = UDim2.new((settings[settingKey] - min) / (max - min), -10, 0.5, -10)
     sliderButton.BackgroundColor3 = Color3.new(1, 1, 1)
     sliderButton.Text = ""
     sliderButton.BorderSizePixel = 0
     sliderButton.ZIndex = 2
+    sliderButton.Parent = sliderBackground
     
-    local buttonCorner = Instance.new("UICorner", sliderButton)
+    local buttonCorner = Instance.new("UICorner")
     buttonCorner.CornerRadius = UDim.new(0, 10)
+    buttonCorner.Parent = sliderButton
 
     local dragging = false
 
@@ -832,13 +889,14 @@ local function createSlider(name, position, settingKey, min, max, step, parent)
 end
 
 local function createDropdown(name, position, options, settingKey, parent)
-    local dropdownFrame = Instance.new("Frame", parent)
+    local dropdownFrame = Instance.new("Frame")
     dropdownFrame.Size = UDim2.new(0, 280, 0, 50)
     dropdownFrame.Position = position
     dropdownFrame.BackgroundTransparency = 1
+    dropdownFrame.Parent = parent
     table.insert(uiElements, dropdownFrame)
 
-    local label = Instance.new("TextLabel", dropdownFrame)
+    local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 0, 20)
     label.Position = UDim2.new(0, 0, 0, 0)
     label.BackgroundTransparency = 1
@@ -847,8 +905,9 @@ local function createDropdown(name, position, options, settingKey, parent)
     label.Font = Enum.Font.SourceSansSemibold
     label.TextSize = 16
     label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = dropdownFrame
 
-    local dropdownButton = Instance.new("TextButton", dropdownFrame)
+    local dropdownButton = Instance.new("TextButton")
     dropdownButton.Size = UDim2.new(1, 0, 0, 25)
     dropdownButton.Position = UDim2.new(0, 0, 1, -25)
     dropdownButton.Text = "▼ " .. tostring(settings[settingKey])
@@ -857,9 +916,11 @@ local function createDropdown(name, position, options, settingKey, parent)
     dropdownButton.Font = Enum.Font.SourceSans
     dropdownButton.TextSize = 14
     dropdownButton.BorderSizePixel = 0
+    dropdownButton.Parent = dropdownFrame
     
-    local buttonCorner = Instance.new("UICorner", dropdownButton)
+    local buttonCorner = Instance.new("UICorner")
     buttonCorner.CornerRadius = UDim.new(0, 4)
+    buttonCorner.Parent = dropdownButton
 
     dropdownButton.MouseButton1Click:Connect(function()
         local currentIndex = table.find(options, settings[settingKey]) or 1
@@ -952,7 +1013,7 @@ local function drawTabContent()
 end
 
 local function createTabButton(name, xPosition)
-    local tabButton = Instance.new("TextButton", tabContainer)
+    local tabButton = Instance.new("TextButton")
     tabButton.Size = UDim2.new(0, 120, 1, 0)
     tabButton.Position = UDim2.new(0, xPosition, 0, 0)
     tabButton.Text = name
@@ -962,9 +1023,11 @@ local function createTabButton(name, xPosition)
     tabButton.TextSize = 16
     tabButton.BorderSizePixel = 0
     tabButton.AutoButtonColor = false
+    tabButton.Parent = tabContainer
     
-    local tabCorner = Instance.new("UICorner", tabButton)
+    local tabCorner = Instance.new("UICorner")
     tabCorner.CornerRadius = UDim.new(0, 6)
+    tabCorner.Parent = tabButton
     
     tabButton.MouseEnter:Connect(function()
         if currentTab ~= name then
@@ -1036,7 +1099,9 @@ end)
 
 local function cleanup()
     for _, drawing in ipairs(drawings) do
-        drawing:Remove()
+        pcall(function()
+            drawing:Remove()
+        end)
     end
     
     if connection then
@@ -1051,7 +1116,9 @@ local function cleanup()
         flyBG:Destroy()
     end
     
-    ScreenGui:Destroy()
+    pcall(function()
+        ScreenGui:Destroy()
+    end)
 end
 
 game:GetService("CoreGui").ChildRemoved:Connect(function(child)
@@ -1064,7 +1131,9 @@ LP.CharacterRemoving:Connect(cleanup)
 
 task.spawn(function()
 
-    ContentProvider:PreloadAsync({userImage.Image})
+    pcall(function()
+        ContentProvider:PreloadAsync({userImage.Image})
+    end)
     
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LP then
@@ -1079,14 +1148,15 @@ task.spawn(function()
     flySpeed = settings.flySpeed
     
     while true do
-
         if flySpeed ~= settings.flySpeed then
             flySpeed = settings.flySpeed
         end
         
-        fovCircle.Visible = settings.fovVisible
-        fovCircle.Radius = settings.fov
-        fovCircle.Color = Color3.new(1, 1, 1)
+        if fovCircle then
+            fovCircle.Visible = settings.fovVisible
+            fovCircle.Radius = settings.fov
+            fovCircle.Color = Color3.new(1, 1, 1)
+        end
         
         settings.espColor = Color3.fromRGB(settings.espR, settings.espG, settings.espB)
         
@@ -1127,5 +1197,4 @@ end
 
 Camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateUIScale)
 updateUIScale()
-
-return settings
+return setting
